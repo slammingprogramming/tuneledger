@@ -88,7 +88,9 @@ function toPlatformRelativePath(ref) {
 
 async function fileExists(p) {
   try {
-    await fs.access(p); // codeql[js/path-injection] p always derives from an already-validated wplDir/media reference (assertSafeLibraryPath / LIBRARY_ROOTS)
+    // p always derives from an already-validated wplDir/media reference (assertSafeLibraryPath / LIBRARY_ROOTS).
+    // codeql[js/path-injection]
+    await fs.access(p);
     return true;
   } catch {
     return false;
@@ -115,7 +117,8 @@ async function importWpl(db, {
 }) {
   wplPath = assertSafeLibraryPath(wplPath, 'wplPath');
   // Operator-supplied .wpl path, optionally confined by LIBRARY_ROOTS (see README/SECURITY.md) - same trust model as pointing Jellyfin/Lidarr at a library folder.
-  const xmlText = await fs.readFile(wplPath, 'utf8'); // codeql[js/path-injection]
+  // codeql[js/path-injection]
+  const xmlText = await fs.readFile(wplPath, 'utf8');
   const parsed = parseWpl(xmlText);
 
   if (parsed.isSmart) {

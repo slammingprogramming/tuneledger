@@ -84,7 +84,8 @@ function readCsv(fileOrBuffer) {
   // non-string) for defense in depth.
   const buf = Buffer.isBuffer(fileOrBuffer)
     ? fileOrBuffer
-    : fs.readFileSync(assertSafePath(fileOrBuffer, 'CSV file path')); // codeql[js/path-injection]
+    // codeql[js/path-injection]
+    : fs.readFileSync(assertSafePath(fileOrBuffer, 'CSV file path'));
   const records = parse(buf, {
     bom: true,
     columns: true,

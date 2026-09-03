@@ -22,7 +22,8 @@ function classifyMediaKind(filePath) {
 async function* walkMediaFiles(rootDir, { excludeDirNames }) {
   const safeRootDir = assertSafeLibraryPath(rootDir, 'rootDir');
   // Operator-supplied library directory, optionally confined by LIBRARY_ROOTS (see README/SECURITY.md) - same trust model as pointing Jellyfin/Lidarr at a library folder.
-  const entries = await fs.readdir(safeRootDir, { withFileTypes: true }); // codeql[js/path-injection]
+  // codeql[js/path-injection]
+  const entries = await fs.readdir(safeRootDir, { withFileTypes: true });
   for (const entry of entries) {
     const full = path.join(safeRootDir, entry.name);
     if (entry.isDirectory()) {
@@ -57,7 +58,8 @@ async function moveFileTo(filePath, destPath) {
   const safeFilePath = assertSafeLibraryPath(filePath, 'filePath');
   const safeDestPath = assertSafeLibraryPath(destPath, 'destPath');
   // Destination is always inside the review folder (optionally LIBRARY_ROOTS-confined) or an explicit apply-moves target already validated above.
-  await fs.mkdir(path.dirname(safeDestPath), { recursive: true }); // codeql[js/path-injection]
+  // codeql[js/path-injection]
+  await fs.mkdir(path.dirname(safeDestPath), { recursive: true });
 
   let dest = safeDestPath;
   let n = 1;
@@ -68,12 +70,16 @@ async function moveFileTo(filePath, destPath) {
   }
 
   try {
-    await fs.rename(safeFilePath, dest); // codeql[js/path-injection] both endpoints already validated above (assertSafeLibraryPath / LIBRARY_ROOTS)
+    // Both endpoints already validated above (assertSafeLibraryPath / LIBRARY_ROOTS).
+    // codeql[js/path-injection]
+    await fs.rename(safeFilePath, dest);
   } catch (err) {
     if (err.code === 'EXDEV') {
       // Cross-device move (e.g. different drive) - rename() can't do this atomically.
-      await fs.copyFile(safeFilePath, dest); // codeql[js/path-injection]
-      await fs.unlink(safeFilePath); // codeql[js/path-injection]
+      // codeql[js/path-injection]
+      await fs.copyFile(safeFilePath, dest);
+      // codeql[js/path-injection]
+      await fs.unlink(safeFilePath);
     } else {
       throw err;
     }
@@ -91,7 +97,9 @@ async function moveToReview(filePath, rootDir, reviewFolder) {
 
 async function fileExists(p) {
   try {
-    await fs.access(p); // codeql[js/path-injection] p always derives from an already-validated rootDir/destPath above
+    // p always derives from an already-validated rootDir/destPath above (assertSafeLibraryPath / LIBRARY_ROOTS).
+    // codeql[js/path-injection]
+    await fs.access(p);
     return true;
   } catch {
     return false;
