@@ -1,5 +1,20 @@
 # TuneLedger
 
+[![CI](https://github.com/slammingprogramming/tuneledger/actions/workflows/ci.yml/badge.svg)](https://github.com/slammingprogramming/tuneledger/actions/workflows/ci.yml)
+[![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+[![GitHub issues](https://img.shields.io/github/issues/slammingprogramming/tuneledger.svg)](https://github.com/slammingprogramming/tuneledger/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/slammingprogramming/tuneledger.svg)](https://github.com/slammingprogramming/tuneledger/commits/main)
+[![GitHub stars](https://img.shields.io/github/stars/slammingprogramming/tuneledger.svg?style=social)](https://github.com/slammingprogramming/tuneledger/stargazers)
+
+![Express](https://img.shields.io/badge/backend-Express-000000?logo=express&logoColor=white)
+![SQLite](https://img.shields.io/badge/database-SQLite-003B57?logo=sqlite&logoColor=white)
+![MusicBrainz](https://img.shields.io/badge/identification-MusicBrainz-BA478F?logo=musicbrainz&logoColor=white)
+![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)
+![No build step](https://img.shields.io/badge/frontend-vanilla%20JS%2C%20no%20build%20step-yellow.svg)
+
 **Keep track of every song you want, own, identify, and acquire.**
 
 TuneLedger turns messy, scattered evidence of "music I want" — Spotify CSV exports,
@@ -635,3 +650,20 @@ and PR expectations. This project follows the [Contributor Covenant](CODE_OF_CON
 
 Found a vulnerability? Please don't file it as a public issue - see [SECURITY.md](SECURITY.md)
 for private, verified reporting.
+
+## Acknowledgments
+
+- [MusicBrainz](https://musicbrainz.org) — the open, community-maintained recording database
+  that TuneLedger's identification pipeline confirms tags/folder/filename guesses against. No
+  audio fingerprinting, no account, no API key - just polite, rate-limited use of their free
+  metadata search per [their usage policy](https://musicbrainz.org/doc/MusicBrainz_API).
+- [Exportify](https://exportify.net) — the export tool this project's CSV field-mapping was
+  built and tested against.
+- Everyone who files an issue, opens a PR, or reports a vulnerability responsibly through
+  [SECURITY.md](SECURITY.md).
+
+## License
+
+[AGPL-3.0-or-later](LICENSE). If you host a modified version of TuneLedger as a network
+service, the AGPL requires you to make your modified source available to the people using it
+- see the license for the exact terms.
