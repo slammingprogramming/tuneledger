@@ -16,6 +16,7 @@
     "better-sqlite3": "^11.3.0",
     "csv-parse": "^5.5.6",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.7.0",
     "fast-xml-parser": "^5.10.1",
     "multer": "^1.4.5-lts.1",
     "music-metadata": "^11.14.0"

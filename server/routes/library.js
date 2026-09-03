@@ -6,6 +6,7 @@ const express = require('express');
 const { runLibraryScan, moveFileTo } = require('../lib/library-scanner');
 const { importWpl } = require('../lib/wpl');
 const { createMusicBrainzClient } = require('../lib/musicbrainz');
+const { assertSafePath } = require('../lib/safe-path');
 
 const MB_CONFIG_PATH = path.join(__dirname, '..', '..', 'config', 'musicbrainz.json');
 
@@ -49,8 +50,10 @@ module.exports = function buildLibraryRouter(db) {
   router.post(
     '/library-scan',
     wrap((req, res) => {
-      const { rootPath, reviewFolder, dryRun = true, useMusicBrainz = true, markDownloaded = true } = req.body || {};
-      if (!rootPath) return res.status(400).json({ error: 'rootPath is required' });
+      const { rootPath: rawRootPath, reviewFolder: rawReviewFolder, dryRun = true, useMusicBrainz = true, markDownloaded = true } = req.body || {};
+      if (!rawRootPath) return res.status(400).json({ error: 'rootPath is required' });
+      const rootPath = assertSafePath(rawRootPath, 'rootPath');
+      const reviewFolder = rawReviewFolder ? assertSafePath(rawReviewFolder, 'reviewFolder') : null;
       if (!fs.existsSync(rootPath) || !fs.statSync(rootPath).isDirectory()) {
         return res.status(400).json({ error: `Not a directory: ${rootPath}` });
       }
@@ -60,7 +63,7 @@ module.exports = function buildLibraryRouter(db) {
           `INSERT INTO scan_jobs (source_type, root_path, review_folder, status, dry_run, use_musicbrainz, mark_downloaded)
            VALUES ('local_scan', ?, ?, 'running', ?, ?, ?)`
         )
-        .run(rootPath, reviewFolder || null, dryRun ? 1 : 0, useMusicBrainz ? 1 : 0, markDownloaded ? 1 : 0);
+        .run(rootPath, reviewFolder, dryRun ? 1 : 0, useMusicBrainz ? 1 : 0, markDownloaded ? 1 : 0);
       const jobId = jobInfo.lastInsertRowid;
       cancelFlags.set(jobId, false);
 
@@ -114,8 +117,10 @@ module.exports = function buildLibraryRouter(db) {
   router.post(
     '/wpl-import',
     wrap((req, res) => {
-      const { wplPath, reviewFolder, dryRun = true, useMusicBrainz = true, markDownloaded = true } = req.body || {};
-      if (!wplPath) return res.status(400).json({ error: 'wplPath is required' });
+      const { wplPath: rawWplPath, reviewFolder: rawReviewFolder, dryRun = true, useMusicBrainz = true, markDownloaded = true } = req.body || {};
+      if (!rawWplPath) return res.status(400).json({ error: 'wplPath is required' });
+      const wplPath = assertSafePath(rawWplPath, 'wplPath');
+      const reviewFolder = rawReviewFolder ? assertSafePath(rawReviewFolder, 'reviewFolder') : null;
       if (!fs.existsSync(wplPath)) return res.status(400).json({ error: `File not found: ${wplPath}` });
 
       const jobInfo = db

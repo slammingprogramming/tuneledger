@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Default to no access; the checkout step below needs read access to the
+# repo contents and nothing else, so that's the only scope granted.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test (Node ${{ matrix.node-version }})

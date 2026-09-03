@@ -5,6 +5,7 @@ const path = require('path');
 const { identifyFile } = require('./identify');
 const { runDedupe } = require('./dedupe');
 const { normalizeForKey, classifyReleaseCategory } = require('./normalize');
+const { assertSafePath } = require('./safe-path');
 
 const AUDIO_EXT = new Set(['.mp3', '.flac', '.m4a', '.aac', '.wav', '.wma', '.ogg', '.opus', '.alac', '.aiff', '.ape', '.wv']);
 const VIDEO_EXT = new Set(['.mp4', '.mkv', '.webm', '.avi', '.mov', '.m4v', '.flv', '.wmv']);
@@ -19,9 +20,10 @@ function classifyMediaKind(filePath) {
 
 /** Recursively enumerate audio/video files under `rootDir`, skipping any review folder from a prior scan. */
 async function* walkMediaFiles(rootDir, { excludeDirNames }) {
-  const entries = await fs.readdir(rootDir, { withFileTypes: true });
+  const safeRootDir = assertSafePath(rootDir, 'rootDir');
+  const entries = await fs.readdir(safeRootDir, { withFileTypes: true });
   for (const entry of entries) {
-    const full = path.join(rootDir, entry.name);
+    const full = path.join(safeRootDir, entry.name);
     if (entry.isDirectory()) {
       if (excludeDirNames.has(entry.name)) continue;
       yield* walkMediaFiles(full, { excludeDirNames });
@@ -51,23 +53,25 @@ function parseReleaseYear(dateStr) {
  * boundary. Returns the actual destination used.
  */
 async function moveFileTo(filePath, destPath) {
-  await fs.mkdir(path.dirname(destPath), { recursive: true });
+  const safeFilePath = assertSafePath(filePath, 'filePath');
+  const safeDestPath = assertSafePath(destPath, 'destPath');
+  await fs.mkdir(path.dirname(safeDestPath), { recursive: true });
 
-  let dest = destPath;
+  let dest = safeDestPath;
   let n = 1;
-  const { dir, name, ext } = path.parse(destPath);
+  const { dir, name, ext } = path.parse(safeDestPath);
   while (await fileExists(dest)) {
     dest = path.join(dir, `${name} (${n})${ext}`);
     n += 1;
   }
 
   try {
-    await fs.rename(filePath, dest);
+    await fs.rename(safeFilePath, dest);
   } catch (err) {
     if (err.code === 'EXDEV') {
       // Cross-device move (e.g. different drive) - rename() can't do this atomically.
-      await fs.copyFile(filePath, dest);
-      await fs.unlink(filePath);
+      await fs.copyFile(safeFilePath, dest);
+      await fs.unlink(safeFilePath);
     } else {
       throw err;
     }
@@ -77,8 +81,10 @@ async function moveFileTo(filePath, destPath) {
 
 /** Move a file, preserving `rootDir`-relative structure under `reviewFolder`. */
 async function moveToReview(filePath, rootDir, reviewFolder) {
-  const rel = path.relative(rootDir, filePath);
-  return moveFileTo(filePath, path.join(reviewFolder, rel));
+  const safeRootDir = assertSafePath(rootDir, 'rootDir');
+  const safeReviewFolder = assertSafePath(reviewFolder, 'reviewFolder');
+  const rel = path.relative(safeRootDir, assertSafePath(filePath, 'filePath'));
+  return moveFileTo(filePath, path.join(safeReviewFolder, rel));
 }
 
 async function fileExists(p) {
@@ -194,7 +200,8 @@ async function runLibraryScan(db, {
   isCancelled = () => false,
   onProgress = () => {},
 }) {
-  const resolvedReview = reviewFolder || path.join(rootDir, DEFAULT_REVIEW_FOLDER_NAME);
+  rootDir = assertSafePath(rootDir, 'rootDir');
+  const resolvedReview = reviewFolder ? assertSafePath(reviewFolder, 'reviewFolder') : path.join(rootDir, DEFAULT_REVIEW_FOLDER_NAME);
   const excludeDirNames = new Set([path.basename(resolvedReview)]);
 
   const total = await countMediaFiles(rootDir, { excludeDirNames });

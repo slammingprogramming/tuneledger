@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const { parse } = require('csv-parse/sync');
+const { assertSafePath } = require('./safe-path');
 const {
   cleanWhitespace,
   normalizeForKey,
@@ -76,7 +77,9 @@ function extractTrackId(uri, idField) {
  * keyed by the *original* header strings, values always strings).
  */
 function readCsv(fileOrBuffer) {
-  const buf = Buffer.isBuffer(fileOrBuffer) ? fileOrBuffer : fs.readFileSync(fileOrBuffer);
+  const buf = Buffer.isBuffer(fileOrBuffer)
+    ? fileOrBuffer
+    : fs.readFileSync(assertSafePath(fileOrBuffer, 'CSV file path'));
   const records = parse(buf, {
     bom: true,
     columns: true,

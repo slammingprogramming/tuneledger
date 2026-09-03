@@ -6,6 +6,7 @@ const { XMLParser } = require('fast-xml-parser');
 const { identifyFile } = require('./identify');
 const { classifyMediaKind, moveToReview, insertIdentifiedFile, DEFAULT_REVIEW_FOLDER_NAME } = require('./library-scanner');
 const { runDedupe } = require('./dedupe');
+const { assertSafePath } = require('./safe-path');
 
 function toArray(x) {
   if (x === undefined || x === null) return [];
@@ -112,6 +113,7 @@ async function importWpl(db, {
   scanJobId = null,
   onProgress = () => {},
 }) {
+  wplPath = assertSafePath(wplPath, 'wplPath');
   const xmlText = await fs.readFile(wplPath, 'utf8');
   const parsed = parseWpl(xmlText);
 
@@ -129,7 +131,7 @@ async function importWpl(db, {
   }
 
   const wplDir = path.dirname(wplPath);
-  const resolvedReview = reviewFolder || path.join(wplDir, DEFAULT_REVIEW_FOLDER_NAME);
+  const resolvedReview = reviewFolder ? assertSafePath(reviewFolder, 'reviewFolder') : path.join(wplDir, DEFAULT_REVIEW_FOLDER_NAME);
 
   const insertImport = db.prepare(
     `INSERT INTO imports (filename, label, row_count, ok_count, error_count, source_type, root_path)
@@ -154,7 +156,14 @@ async function importWpl(db, {
     onProgress({ totalFiles: stats.totalRefs, processedFiles: processed, currentFile: rawRef });
 
     const ref = toPlatformRelativePath(rawRef);
-    const resolved = path.isAbsolute(ref) ? ref : path.resolve(wplDir, ref);
+    let resolved;
+    try {
+      const candidate = path.isAbsolute(ref) ? ref : path.resolve(wplDir, ref);
+      resolved = assertSafePath(candidate, 'media reference');
+    } catch {
+      stats.skippedCount += 1;
+      continue;
+    }
     const mediaKind = classifyMediaKind(resolved);
     if (!mediaKind) {
       stats.skippedCount += 1;

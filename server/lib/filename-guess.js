@@ -3,6 +3,18 @@
 const path = require('path');
 const { cleanWhitespace, extractVersionInfo, DASH_CHARS } = require('./normalize');
 
+// Filenames/tag strings this module parses are OS- and tag-length-bounded
+// in practice (most filesystems cap a single path component around 255
+// bytes), but they originate from disk contents or an imported playlist -
+// data this app doesn't control the shape of. Truncating before any regex
+// match bounds the input size the regex engine ever has to backtrack over,
+// which is a full mitigation against catastrophic/polynomial backtracking
+// regardless of how a given pattern behaves in the worst case.
+const MAX_MATCH_LEN = 300;
+function capLength(s) {
+  return s.length > MAX_MATCH_LEN ? s.slice(0, MAX_MATCH_LEN) : s;
+}
+
 const GENERIC_PLACEHOLDERS = new Set(['track', 'audio', 'video', 'untitled', 'unknown', 'new track']);
 // Unlabeled-rip placeholders like "Track 2", "Track02", "Track_03" - a very
 // common artifact of ripping software when no metadata/CDDB match was
@@ -24,18 +36,25 @@ function isPlausiblePart(s) {
 // lyri" - truncated by an upload tool's filename length limit). Stripped
 // only when building a MusicBrainz *query* string - never silently baked
 // into a stored title.
+// Whitespace runs are bounded ({0,10} / {0,5}) rather than unbounded (`*`)
+// so the regex engine has at most a constant number of backtracking states
+// to explore here, regardless of input length - real filenames never have
+// runs of 10+ consecutive spaces between words anyway.
 const TRAILING_NOISE_RE = new RegExp(
-  '\\s*\\b(karaoke|lyrics?|lyri|instrumental|official\\s*(music\\s*)?video|official\\s*audio|hd|hq)\\b\\.?\\s*$',
+  '\\s{0,10}\\b(karaoke|lyrics?|lyri|instrumental|official\\s{0,5}(music\\s{0,5})?video|official\\s{0,5}audio|hd|hq)\\b\\.?\\s{0,10}$',
   'i'
 );
+const MAX_STRIP_ITERATIONS = 25;
 function stripTrailingNoise(s) {
   if (!s) return s;
   let prev;
-  let cur = cleanWhitespace(s);
+  let cur = capLength(cleanWhitespace(s));
+  let iterations = 0;
   do {
     prev = cur;
     cur = cleanWhitespace(cur.replace(TRAILING_NOISE_RE, ''));
-  } while (cur !== prev && cur.length > 0);
+    iterations += 1;
+  } while (cur !== prev && cur.length > 0 && iterations < MAX_STRIP_ITERATIONS);
   return cur || s;
 }
 
@@ -60,7 +79,7 @@ const DASH_SPLIT_RE = new RegExp(`^(.+?)\\s+[${DASH_CHARS}]\\s+(.+)$`);
  * tags or a MusicBrainz-confirmed match - see identify.js.
  */
 function guessFromFilename(filePath) {
-  const base = cleanWhitespace(path.basename(filePath, path.extname(filePath)));
+  const base = capLength(cleanWhitespace(path.basename(filePath, path.extname(filePath))));
 
   let trackNumber = null;
   let rest = base;
@@ -103,8 +122,48 @@ function guessFromFilename(filePath) {
   };
 }
 
-const STYLE_OF_RE = /\bin the style of\s+(.+)$/i;
-const BY_RE = /^(.+?)\s+by\s+(.+)$/i;
+// "in the style of ARTIST" and "TITLE by ARTIST" are found via a plain
+// left-to-right string scan rather than a `(.+?)\s+X\s+(.+)$`-shaped regex:
+// that shape lets the engine backtrack the lazy group against every
+// possible split point around each whitespace run when the delimiter is
+// absent, which is quadratic in the length of the (uncontrolled) filename.
+// A manual scan is linear and needs no backtracking at all.
+const STYLE_OF_MARKER = 'in the style of';
+
+function findStyleOfSplit(stem) {
+  const lower = stem.toLowerCase();
+  let from = 0;
+  while (true) {
+    const idx = lower.indexOf(STYLE_OF_MARKER, from);
+    if (idx === -1) return null;
+    const precedingChar = stem[idx - 1];
+    const followingChar = stem[idx + STYLE_OF_MARKER.length];
+    const boundaryOk = idx === 0 || !/\w/.test(precedingChar);
+    if (boundaryOk && followingChar && /\s/.test(followingChar)) {
+      const after = stem.slice(idx + STYLE_OF_MARKER.length).replace(/^\s+/, '');
+      if (after) return { before: stem.slice(0, idx), after };
+    }
+    from = idx + 1;
+  }
+}
+
+function findBySplit(stem) {
+  const lower = stem.toLowerCase();
+  let from = 0;
+  while (true) {
+    const idx = lower.indexOf('by', from);
+    if (idx === -1) return null;
+    const precedingChar = stem[idx - 1];
+    const followingChar = stem[idx + 2];
+    if (idx > 0 && precedingChar && /\s/.test(precedingChar) && followingChar && /\s/.test(followingChar)) {
+      const before = stem.slice(0, idx).replace(/\s+$/, '');
+      const after = stem.slice(idx + 2).replace(/^\s+/, '');
+      if (before && after) return { before, after };
+    }
+    from = idx + 1;
+  }
+}
+
 const ASYMMETRIC_DASH_A_RE = new RegExp(`^(.+?)[${DASH_CHARS}]\\s+(.+)$`); // "Artist- Title"
 const ASYMMETRIC_DASH_B_RE = new RegExp(`^(.+?)\\s+[${DASH_CHARS}](.+)$`); // "Artist -Title"
 const TIGHT_DASH_RE = new RegExp(`^([^${DASH_CHARS}]+)[${DASH_CHARS}]([^${DASH_CHARS}]+)$`); // "Artist-Title", no spaces
@@ -129,7 +188,7 @@ const UNDERSCORE_SPLIT_RE = /^([^_]+)_([^_]+)$/; // "Movie_Song", exactly one un
  * since the split point itself is a guess, not a reliable convention.
  */
 function guessSecondaryCandidates(filePath) {
-  const base = cleanWhitespace(path.basename(filePath, path.extname(filePath)));
+  const base = capLength(cleanWhitespace(path.basename(filePath, path.extname(filePath))));
   let rest = base;
   const numMatch = base.match(LEADING_TRACK_NUM_RE);
   if (numMatch) rest = cleanWhitespace(numMatch[2]);
@@ -148,13 +207,13 @@ function guessSecondaryCandidates(filePath) {
     candidates.push({ artist, title, versionType, versionDetail, source });
   };
 
-  const styleMatch = stem.match(STYLE_OF_RE);
-  if (styleMatch) {
-    push(stripTrailingNoise(styleMatch[1]), stem.slice(0, styleMatch.index), 'style-of');
+  const styleSplit = findStyleOfSplit(stem);
+  if (styleSplit) {
+    push(stripTrailingNoise(styleSplit.after), styleSplit.before, 'style-of');
   }
 
-  const byMatch = stem.match(BY_RE);
-  if (byMatch) push(byMatch[2], byMatch[1], 'by');
+  const bySplit = findBySplit(stem);
+  if (bySplit) push(bySplit.after, bySplit.before, 'by');
 
   const asymA = stem.match(ASYMMETRIC_DASH_A_RE);
   if (asymA) push(asymA[1], asymA[2], 'asymmetric-dash');

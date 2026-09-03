@@ -8,6 +8,12 @@ meaningful milestones.
 ## [Unreleased]
 
 - Public GitHub repository prep: issue/PR templates, CI, contributing/security/code-of-conduct docs.
+- Security hardening in response to CodeQL findings on the public repo: a shared
+  `server/lib/safe-path.js` validator (rejects non-string/empty/NUL-byte path input, canonicalizes
+  via `path.resolve`) applied everywhere a request-supplied path reaches the filesystem
+  (`rootPath`, `wplPath`, `reviewFolder`, WPL media references, and the CSV-import path branch);
+  a per-IP rate limiter on `/api`; bounded/rewritten regexes in `filename-guess.js` to remove
+  polynomial-backtracking shapes; and an explicit `permissions: contents: read` on the CI workflow.
 
 ## [1.1.0]
 
