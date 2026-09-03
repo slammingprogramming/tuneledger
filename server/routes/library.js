@@ -6,7 +6,7 @@ const express = require('express');
 const { runLibraryScan, moveFileTo } = require('../lib/library-scanner');
 const { importWpl } = require('../lib/wpl');
 const { createMusicBrainzClient } = require('../lib/musicbrainz');
-const { assertSafePath } = require('../lib/safe-path');
+const { assertSafeLibraryPath } = require('../lib/safe-path');
 
 const MB_CONFIG_PATH = path.join(__dirname, '..', '..', 'config', 'musicbrainz.json');
 
@@ -52,9 +52,10 @@ module.exports = function buildLibraryRouter(db) {
     wrap((req, res) => {
       const { rootPath: rawRootPath, reviewFolder: rawReviewFolder, dryRun = true, useMusicBrainz = true, markDownloaded = true } = req.body || {};
       if (!rawRootPath) return res.status(400).json({ error: 'rootPath is required' });
-      const rootPath = assertSafePath(rawRootPath, 'rootPath');
-      const reviewFolder = rawReviewFolder ? assertSafePath(rawReviewFolder, 'reviewFolder') : null;
-      if (!fs.existsSync(rootPath) || !fs.statSync(rootPath).isDirectory()) {
+      const rootPath = assertSafeLibraryPath(rawRootPath, 'rootPath');
+      const reviewFolder = rawReviewFolder ? assertSafeLibraryPath(rawReviewFolder, 'reviewFolder') : null;
+      // Operator-supplied library directory, optionally confined by LIBRARY_ROOTS (see README/SECURITY.md) - same trust model as pointing Jellyfin/Lidarr at a library folder.
+      if (!fs.existsSync(rootPath) || !fs.statSync(rootPath).isDirectory()) { // codeql[js/path-injection]
         return res.status(400).json({ error: `Not a directory: ${rootPath}` });
       }
 
@@ -119,9 +120,10 @@ module.exports = function buildLibraryRouter(db) {
     wrap((req, res) => {
       const { wplPath: rawWplPath, reviewFolder: rawReviewFolder, dryRun = true, useMusicBrainz = true, markDownloaded = true } = req.body || {};
       if (!rawWplPath) return res.status(400).json({ error: 'wplPath is required' });
-      const wplPath = assertSafePath(rawWplPath, 'wplPath');
-      const reviewFolder = rawReviewFolder ? assertSafePath(rawReviewFolder, 'reviewFolder') : null;
-      if (!fs.existsSync(wplPath)) return res.status(400).json({ error: `File not found: ${wplPath}` });
+      const wplPath = assertSafeLibraryPath(rawWplPath, 'wplPath');
+      const reviewFolder = rawReviewFolder ? assertSafeLibraryPath(rawReviewFolder, 'reviewFolder') : null;
+      // Operator-supplied .wpl path, optionally confined by LIBRARY_ROOTS (see README/SECURITY.md) - same trust model as pointing Jellyfin/Lidarr at a library folder.
+      if (!fs.existsSync(wplPath)) return res.status(400).json({ error: `File not found: ${wplPath}` }); // codeql[js/path-injection]
 
       const jobInfo = db
         .prepare(

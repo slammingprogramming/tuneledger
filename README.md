@@ -559,15 +559,37 @@ down` first if you want a guaranteed-consistent copy, though `.backup` works liv
 
 ## Configuration
 
-| Env var   | Default                    | Purpose                          |
-|-----------|-----------------------------|-----------------------------------|
-| `DB_PATH` | `app/data/library.db`       | Path to the SQLite database file |
-| `PORT`    | `3000`                      | HTTP port                        |
+| Env var         | Default                | Purpose                                                    |
+|------------------|-------------------------|--------------------------------------------------------------|
+| `DB_PATH`        | `app/data/library.db`  | Path to the SQLite database file                            |
+| `PORT`           | `3000`                 | HTTP port                                                    |
+| `LIBRARY_ROOTS`  | unset (unrestricted)   | Confine directory scans/WPL imports to these directories - see below |
 
 Deduplication weights/thresholds: [`config/dedupe.json`](config/dedupe.json) (see
 [Deduplication algorithm](#deduplication-algorithm) above). MusicBrainz User-Agent/
 confidence threshold: [`config/musicbrainz.json`](config/musicbrainz.json) (see
 [MusicBrainz setup](#musicbrainz-setup) above).
+
+### `LIBRARY_ROOTS`
+
+By design, [directory scans and WPL imports](#local-library-scanning--wpl-import) accept
+*any* path the operator names - the same trust model as pointing Jellyfin, Sonarr, Radarr, or
+Lidarr at a library folder: the person calling this API is this app's own operator, not an
+untrusted third party, so there's no single "correct" root to confine it to by default.
+
+If you'd rather lock a running instance down anyway - e.g. it's reachable by more than just
+you - set `LIBRARY_ROOTS` to one or more absolute directories, separated by the OS path-list
+delimiter (`:` on Linux/macOS, `;` on Windows). Every `rootPath`, `wplPath`, and
+`reviewFolder` must then resolve to one of those directories (or something inside them), or
+the request is rejected with a 400:
+
+```bash
+LIBRARY_ROOTS="/mnt/music:/mnt/music-backup" npm start        # Linux/macOS
+LIBRARY_ROOTS="D:\Music;E:\Music Backup" npm start             # Windows
+```
+
+Leaving it unset preserves today's behavior of scanning whatever directory you point it at.
+See [`server/lib/safe-path.js`](server/lib/safe-path.js) for the implementation.
 
 ## Tests
 

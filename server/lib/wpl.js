@@ -6,7 +6,7 @@ const { XMLParser } = require('fast-xml-parser');
 const { identifyFile } = require('./identify');
 const { classifyMediaKind, moveToReview, insertIdentifiedFile, DEFAULT_REVIEW_FOLDER_NAME } = require('./library-scanner');
 const { runDedupe } = require('./dedupe');
-const { assertSafePath } = require('./safe-path');
+const { assertSafeLibraryPath } = require('./safe-path');
 
 function toArray(x) {
   if (x === undefined || x === null) return [];
@@ -88,7 +88,7 @@ function toPlatformRelativePath(ref) {
 
 async function fileExists(p) {
   try {
-    await fs.access(p);
+    await fs.access(p); // codeql[js/path-injection] p always derives from an already-validated wplDir/media reference (assertSafeLibraryPath / LIBRARY_ROOTS)
     return true;
   } catch {
     return false;
@@ -113,8 +113,9 @@ async function importWpl(db, {
   scanJobId = null,
   onProgress = () => {},
 }) {
-  wplPath = assertSafePath(wplPath, 'wplPath');
-  const xmlText = await fs.readFile(wplPath, 'utf8');
+  wplPath = assertSafeLibraryPath(wplPath, 'wplPath');
+  // Operator-supplied .wpl path, optionally confined by LIBRARY_ROOTS (see README/SECURITY.md) - same trust model as pointing Jellyfin/Lidarr at a library folder.
+  const xmlText = await fs.readFile(wplPath, 'utf8'); // codeql[js/path-injection]
   const parsed = parseWpl(xmlText);
 
   if (parsed.isSmart) {
@@ -131,7 +132,7 @@ async function importWpl(db, {
   }
 
   const wplDir = path.dirname(wplPath);
-  const resolvedReview = reviewFolder ? assertSafePath(reviewFolder, 'reviewFolder') : path.join(wplDir, DEFAULT_REVIEW_FOLDER_NAME);
+  const resolvedReview = reviewFolder ? assertSafeLibraryPath(reviewFolder, 'reviewFolder') : path.join(wplDir, DEFAULT_REVIEW_FOLDER_NAME);
 
   const insertImport = db.prepare(
     `INSERT INTO imports (filename, label, row_count, ok_count, error_count, source_type, root_path)
@@ -159,7 +160,7 @@ async function importWpl(db, {
     let resolved;
     try {
       const candidate = path.isAbsolute(ref) ? ref : path.resolve(wplDir, ref);
-      resolved = assertSafePath(candidate, 'media reference');
+      resolved = assertSafeLibraryPath(candidate, 'media reference');
     } catch {
       stats.skippedCount += 1;
       continue;

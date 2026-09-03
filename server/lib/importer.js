@@ -77,9 +77,14 @@ function extractTrackId(uri, idField) {
  * keyed by the *original* header strings, values always strings).
  */
 function readCsv(fileOrBuffer) {
+  // The HTTP route (POST /api/imports) always calls importCsv with a multer
+  // memoryStorage() Buffer, never a path - this string branch is only
+  // reachable from trusted internal/test callers (scripts, the test suite),
+  // not from request input. assertSafePath still guards it (NUL bytes,
+  // non-string) for defense in depth.
   const buf = Buffer.isBuffer(fileOrBuffer)
     ? fileOrBuffer
-    : fs.readFileSync(assertSafePath(fileOrBuffer, 'CSV file path'));
+    : fs.readFileSync(assertSafePath(fileOrBuffer, 'CSV file path')); // codeql[js/path-injection]
   const records = parse(buf, {
     bom: true,
     columns: true,

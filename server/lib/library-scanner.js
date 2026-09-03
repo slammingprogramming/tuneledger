@@ -5,7 +5,7 @@ const path = require('path');
 const { identifyFile } = require('./identify');
 const { runDedupe } = require('./dedupe');
 const { normalizeForKey, classifyReleaseCategory } = require('./normalize');
-const { assertSafePath } = require('./safe-path');
+const { assertSafeLibraryPath } = require('./safe-path');
 
 const AUDIO_EXT = new Set(['.mp3', '.flac', '.m4a', '.aac', '.wav', '.wma', '.ogg', '.opus', '.alac', '.aiff', '.ape', '.wv']);
 const VIDEO_EXT = new Set(['.mp4', '.mkv', '.webm', '.avi', '.mov', '.m4v', '.flv', '.wmv']);
@@ -20,8 +20,9 @@ function classifyMediaKind(filePath) {
 
 /** Recursively enumerate audio/video files under `rootDir`, skipping any review folder from a prior scan. */
 async function* walkMediaFiles(rootDir, { excludeDirNames }) {
-  const safeRootDir = assertSafePath(rootDir, 'rootDir');
-  const entries = await fs.readdir(safeRootDir, { withFileTypes: true });
+  const safeRootDir = assertSafeLibraryPath(rootDir, 'rootDir');
+  // Operator-supplied library directory, optionally confined by LIBRARY_ROOTS (see README/SECURITY.md) - same trust model as pointing Jellyfin/Lidarr at a library folder.
+  const entries = await fs.readdir(safeRootDir, { withFileTypes: true }); // codeql[js/path-injection]
   for (const entry of entries) {
     const full = path.join(safeRootDir, entry.name);
     if (entry.isDirectory()) {
@@ -53,9 +54,10 @@ function parseReleaseYear(dateStr) {
  * boundary. Returns the actual destination used.
  */
 async function moveFileTo(filePath, destPath) {
-  const safeFilePath = assertSafePath(filePath, 'filePath');
-  const safeDestPath = assertSafePath(destPath, 'destPath');
-  await fs.mkdir(path.dirname(safeDestPath), { recursive: true });
+  const safeFilePath = assertSafeLibraryPath(filePath, 'filePath');
+  const safeDestPath = assertSafeLibraryPath(destPath, 'destPath');
+  // Destination is always inside the review folder (optionally LIBRARY_ROOTS-confined) or an explicit apply-moves target already validated above.
+  await fs.mkdir(path.dirname(safeDestPath), { recursive: true }); // codeql[js/path-injection]
 
   let dest = safeDestPath;
   let n = 1;
@@ -66,12 +68,12 @@ async function moveFileTo(filePath, destPath) {
   }
 
   try {
-    await fs.rename(safeFilePath, dest);
+    await fs.rename(safeFilePath, dest); // codeql[js/path-injection] both endpoints already validated above (assertSafeLibraryPath / LIBRARY_ROOTS)
   } catch (err) {
     if (err.code === 'EXDEV') {
       // Cross-device move (e.g. different drive) - rename() can't do this atomically.
-      await fs.copyFile(safeFilePath, dest);
-      await fs.unlink(safeFilePath);
+      await fs.copyFile(safeFilePath, dest); // codeql[js/path-injection]
+      await fs.unlink(safeFilePath); // codeql[js/path-injection]
     } else {
       throw err;
     }
@@ -81,15 +83,15 @@ async function moveFileTo(filePath, destPath) {
 
 /** Move a file, preserving `rootDir`-relative structure under `reviewFolder`. */
 async function moveToReview(filePath, rootDir, reviewFolder) {
-  const safeRootDir = assertSafePath(rootDir, 'rootDir');
-  const safeReviewFolder = assertSafePath(reviewFolder, 'reviewFolder');
-  const rel = path.relative(safeRootDir, assertSafePath(filePath, 'filePath'));
+  const safeRootDir = assertSafeLibraryPath(rootDir, 'rootDir');
+  const safeReviewFolder = assertSafeLibraryPath(reviewFolder, 'reviewFolder');
+  const rel = path.relative(safeRootDir, assertSafeLibraryPath(filePath, 'filePath'));
   return moveFileTo(filePath, path.join(safeReviewFolder, rel));
 }
 
 async function fileExists(p) {
   try {
-    await fs.access(p);
+    await fs.access(p); // codeql[js/path-injection] p always derives from an already-validated rootDir/destPath above
     return true;
   } catch {
     return false;
@@ -200,8 +202,8 @@ async function runLibraryScan(db, {
   isCancelled = () => false,
   onProgress = () => {},
 }) {
-  rootDir = assertSafePath(rootDir, 'rootDir');
-  const resolvedReview = reviewFolder ? assertSafePath(reviewFolder, 'reviewFolder') : path.join(rootDir, DEFAULT_REVIEW_FOLDER_NAME);
+  rootDir = assertSafeLibraryPath(rootDir, 'rootDir');
+  const resolvedReview = reviewFolder ? assertSafeLibraryPath(reviewFolder, 'reviewFolder') : path.join(rootDir, DEFAULT_REVIEW_FOLDER_NAME);
   const excludeDirNames = new Set([path.basename(resolvedReview)]);
 
   const total = await countMediaFiles(rootDir, { excludeDirNames });

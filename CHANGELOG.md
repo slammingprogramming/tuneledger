@@ -14,6 +14,12 @@ meaningful milestones.
   (`rootPath`, `wplPath`, `reviewFolder`, WPL media references, and the CSV-import path branch);
   a per-IP rate limiter on `/api`; bounded/rewritten regexes in `filename-guess.js` to remove
   polynomial-backtracking shapes; and an explicit `permissions: contents: read` on the CI workflow.
+- Follow-up hardening: bumped `multer` 1.x -> 2.x (fixes several published DoS advisories);
+  added an opt-in `LIBRARY_ROOTS` env var that confines directory scans/WPL imports to specific
+  directories, with a real path-containment check (see the README's Configuration section); and
+  documented, inline-suppressed the remaining path-injection findings that are inherent to this
+  app's by-design "scan any directory the operator names" feature (same trust model as
+  Jellyfin/Sonarr/Radarr/Lidarr) when `LIBRARY_ROOTS` is left unset.
 
 ## [1.1.0]
 
