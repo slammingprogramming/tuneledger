@@ -20,8 +20,11 @@
     "multer": "^1.4.5-lts.1",
     "music-metadata": "^11.14.0"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "allowScripts": {
     "better-sqlite3@11.10.0": true
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }
