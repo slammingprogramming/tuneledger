@@ -1,0 +1,27 @@
+{
+  "name": "tuneledger",
+  "version": "1.1.0",
+  "description": "TuneLedger - keep track of every song you want, own, identify, and acquire.",
+  "type": "commonjs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "csv-parse": "^5.5.6",
+    "express": "^4.19.2",
+    "fast-xml-parser": "^5.10.1",
+    "multer": "^1.4.5-lts.1",
+    "music-metadata": "^11.14.0"
+  },
+  "license": "MIT",
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true
+  }
+}

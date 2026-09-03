@@ -1,0 +1,5 @@
+Track URI,Track Name,Album Name,Artist Name(s),Release Date,Duration (ms),Popularity,Explicit,Added By,Added At,Genres,Record Label
+spotify:track:u1,ロマンス,アルバム,初音ミク,2015-01-01,180000,50,false,,2021-01-01T00:00:00Z,vocaloid,Crypton
+spotify:track:u2,Café del Mar,Café del Mar Vol. 1,José González,1998-01-01,240000,60,false,,2021-01-01T00:00:00Z,ambient,Mango
+spotify:track:u3,☆Sparkle☆,Emoji Album 💿,Test Artist 🎵,2020-01-01,200000,40,false,,2021-01-01T00:00:00Z,pop,Indie
+spotify:track:u4,Mötley Crüe Cover,Tribute,Various Ünïcödé Ärtïst,2019-01-01,210000,30,false,,2021-01-01T00:00:00Z,rock,Indie

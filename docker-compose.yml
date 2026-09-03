@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    image: tuneledger:local
+    ports:
+      - "3000:3000"
+    volumes:
+      # Named bind mount to a local ./data folder so the sqlite database
+      # (and its WAL/SHM files) survive container rebuilds/restarts and are
+      # trivially backed up by copying the folder.
+      - ./data:/data
+    environment:
+      - DB_PATH=/data/library.db
+      - PORT=3000
+    restart: unless-stopped

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TuneLedger</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header id="topbar">
+  <h1>TuneLedger</h1>
+  <p class="tagline">Keep track of every song you want, own, identify, and acquire.</p>
+  <div id="statsBar" class="stats-bar">Loading stats…</div>
+</header>
+
+<nav id="tabs" class="tabs">
+  <button class="tab-btn active" data-tab="queue">Queue</button>
+  <button class="tab-btn" data-tab="search">Search</button>
+  <button class="tab-btn" data-tab="review">Review Duplicates <span id="reviewBadge" class="badge"></span></button>
+  <button class="tab-btn" data-tab="import">Import</button>
+  <button class="tab-btn" data-tab="library">Local Library</button>
+  <button class="tab-btn" data-tab="history">Import History</button>
+</nav>
+
+<main id="app">
+
+  <section id="tab-queue" class="tab-panel active">
+    <div class="toolbar">
+      <input id="artistFilterQ" type="search" placeholder="Filter artists…" />
+      <select id="artistFilterStatus">
+        <option value="">All artists</option>
+        <option value="incomplete">Incomplete only</option>
+        <option value="complete">Complete only</option>
+      </select>
+      <button id="artistFilterGo">Filter</button>
+    </div>
+    <div id="artistList" class="artist-list"></div>
+    <div class="toolbar">
+      <button id="artistLoadMore">Load more artists</button>
+    </div>
+  </section>
+
+  <section id="tab-search" class="tab-panel">
+    <div class="toolbar toolbar-wrap">
+      <input id="searchQ" type="search" placeholder="Search title / artist / album…" />
+      <input id="searchArtist" type="text" placeholder="Artist contains…" />
+      <input id="searchAlbum" type="text" placeholder="Album contains…" />
+      <select id="searchStatus">
+        <option value="">Any status</option>
+        <option value="not_started">Not started</option>
+        <option value="in_progress">In progress</option>
+        <option value="downloaded">Downloaded</option>
+        <option value="skipped">Skipped</option>
+        <option value="problem">Problem</option>
+      </select>
+      <select id="searchVersion">
+        <option value="">Any version</option>
+        <option value="original">Original</option>
+        <option value="remaster">Remaster</option>
+        <option value="live">Live</option>
+        <option value="acoustic">Acoustic</option>
+        <option value="radio_edit">Radio Edit</option>
+        <option value="extended">Extended</option>
+        <option value="remix">Remix</option>
+        <option value="demo">Demo</option>
+        <option value="instrumental">Instrumental</option>
+        <option value="mono">Mono</option>
+        <option value="stereo">Stereo</option>
+        <option value="cover">Cover</option>
+        <option value="single_version">Single Version</option>
+        <option value="edit">Edit</option>
+        <option value="alternate">Alternate</option>
+        <option value="other">Other</option>
+      </select>
+      <label><input type="checkbox" id="searchDuplicatesOnly" /> Duplicates only</label>
+      <label><input type="checkbox" id="searchMissingMeta" /> Missing metadata</label>
+      <select id="searchIgnored">
+        <option value="exclude">Hide ignored</option>
+        <option value="only">Ignored only</option>
+        <option value="include">Include ignored</option>
+      </select>
+      <button id="searchGo">Search</button>
+    </div>
+    <table class="track-table">
+      <thead><tr><th></th><th>Artist</th><th>Album</th><th>#</th><th>Title</th><th>Version</th><th>Dup</th><th>Status</th><th></th></tr></thead>
+      <tbody id="searchResults"></tbody>
+    </table>
+    <div class="toolbar">
+      <button id="searchPrev">◀ Prev</button>
+      <span id="searchPageInfo"></span>
+      <button id="searchNext">Next ▶</button>
+    </div>
+  </section>
+
+  <section id="tab-review" class="tab-panel">
+    <p class="hint">These pairs looked similar (same artist, same normalized title stem) but weren't automatically merged because something didn't line up confidently — a duration gap, an ambiguous annotation, etc. Confirm to merge them, or reject to keep them separate permanently.</p>
+    <div id="reviewList"></div>
+  </section>
+
+  <section id="tab-import" class="tab-panel">
+    <form id="importForm">
+      <input type="file" id="importFile" accept=".csv" required />
+      <input type="text" id="importLabel" placeholder="Optional label (e.g. 'Liked Songs June 2026')" />
+      <button type="submit">Import CSV</button>
+    </form>
+    <div id="importResult"></div>
+  </section>
+
+  <section id="tab-library" class="tab-panel">
+    <p class="hint">
+      Point at a folder of music you already have (recursed automatically). Each file is
+      identified via embedded tags confirmed against MusicBrainz, falling back to the
+      filename as a last resort. Anything that identifies gets linked into the queue as a
+      known source; anything that doesn't is staged to move into a review folder - nothing
+      on disk changes until you apply the moves (or scan with "Move immediately").
+    </p>
+
+    <div class="library-forms">
+      <form id="scanForm" class="library-form">
+        <h3>Scan a directory</h3>
+        <label>Directory path (recursed)<input type="text" id="scanRootPath" placeholder="C:\Music or /mnt/music" required /></label>
+        <label>Review folder (optional, defaults to "_needs_review" inside the scanned folder)<input type="text" id="scanReviewFolder" placeholder="" /></label>
+        <label>When a file matches a queue item
+          <select id="scanMarkDownloaded">
+            <option value="true" selected>Mark it downloaded — I already have these, don't re-download</option>
+            <option value="false">Link it but keep queued — e.g. these are low-quality, I want better versions</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="scanUseMb" checked /> Use MusicBrainz to confirm/canonicalize identifications</label>
+        <label><input type="checkbox" id="scanMoveNow" /> Move unidentified files immediately (default: stage only, review before moving)</label>
+        <button type="submit" class="primary">Start Scan</button>
+      </form>
+
+      <form id="wplForm" class="library-form">
+        <h3>Import a .wpl playlist</h3>
+        <label>.wpl file path<input type="text" id="wplPath" placeholder="C:\Music\My Playlist.wpl" required /></label>
+        <label>When a file matches a queue item
+          <select id="wplMarkDownloaded">
+            <option value="true" selected>Mark it downloaded — I already have these, don't re-download</option>
+            <option value="false">Link it but keep queued — e.g. these are low-quality, I want better versions</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="wplUseMb" checked /> Use MusicBrainz to confirm/canonicalize identifications</label>
+        <label><input type="checkbox" id="wplMoveNow" /> Move unidentified referenced files immediately</label>
+        <button type="submit" class="primary">Import WPL</button>
+      </form>
+    </div>
+
+    <div id="scanProgress"></div>
+
+    <h3>Scan history</h3>
+    <div id="scanHistory"></div>
+  </section>
+
+  <section id="tab-history" class="tab-panel">
+    <div id="historyList"></div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

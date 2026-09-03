@@ -1,0 +1,5 @@
+Track URI,Track Name,Album Name,Artist Name(s),Release Date,Duration (ms),Popularity,Explicit,Added By,Added At,Genres,Record Label,Disc Number,Track Number
+spotify:track:aaa1,Come Together,Abbey Road,The Beatles,1969-09-26,259950,70,false,,2020-01-01T00:00:00Z,rock,Apple,1,1
+spotify:track:aaa5,Money,The Dark Side of the Moon,Pink Floyd,1973-03-01,382000,80,false,,2020-01-04T00:00:00Z,rock,Harvest,1,6
+spotify:track:new1,Karma Police,OK Computer,Radiohead,1997-05-21,261000,75,false,,2022-01-01T00:00:00Z,rock,Parlophone,1,6
+spotify:track:new2,Paranoid Android,OK Computer,Radiohead,1997-05-21,383000,78,false,,2022-01-01T00:00:00Z,rock,Parlophone,1,2

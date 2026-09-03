@@ -1,0 +1,15 @@
+<?wpl version="1.0"?>
+<smil>
+    <head>
+        <meta name="Generator" content="Microsoft Windows Media Player -- 12.0"/>
+        <title>My Static Playlist</title>
+    </head>
+    <body>
+        <seq>
+            <media src="song-one.mp3"/>
+            <media src="subdir\song-two.mp3"/>
+            <media src="does-not-exist.mp3"/>
+            <media src="notes.txt"/>
+        </seq>
+    </body>
+</smil>

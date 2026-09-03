@@ -1,0 +1,44 @@
+# Changelog
+
+All notable changes to this project are documented here. Format loosely follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project doesn't yet follow
+strict semantic versioning (pre-1.0 territory, effectively) but version bumps are still
+meaningful milestones.
+
+## [Unreleased]
+
+- Public GitHub repository prep: issue/PR templates, CI, contributing/security/code-of-conduct docs.
+
+## [1.1.0]
+
+### Added
+
+- Rebrand to **TuneLedger**.
+- Local library scanning: recursive directory scan, tag/folder/filename identification
+  confirmed against MusicBrainz, with a per-scan choice of whether a match marks the queue
+  item downloaded or just links it as a known source.
+- WPL (Windows Media Player playlist) import, for both static playlists and smart/dynamic
+  (query-based) playlists.
+- MusicBrainz-backed identification pipeline: embedded tags → folder structure →
+  filename → MusicBrainz confirmation, including a conservative title-only last-resort
+  search and a set of weaker, MB-verification-required filename patterns.
+- New recognized version type: `karaoke` (backing tracks are never merged with the
+  original vocal recording).
+- MBID (MusicBrainz recording ID) exact-match dedup stage.
+
+### Fixed
+
+- WPL/directory-scan imports that identified nothing left their `imports` row showing
+  "0 rows" even when many references were actually processed.
+
+## [1.0.0]
+
+### Added
+
+- Spotify CSV import (Exportify-style exports), with column auto-detection.
+- Multi-stage deduplication engine (exact ID, exact metadata, normalized title, fuzzy
+  candidate scoring with a human-review queue for anything ambiguous).
+- Persistent Artist → Album → Track download queue with per-track status, manual
+  overrides (merge/split/edit/ignore), and full status history.
+- CSV/plain-text export.
+- Docker/Compose deployment.

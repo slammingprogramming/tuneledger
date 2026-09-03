@@ -1,0 +1,7 @@
+Track URI,Track Name,Album Name,Artist Name(s),Release Date,Duration (ms),Popularity,Explicit,Added By,Added At,Genres,Record Label
+spotify:track:m1,Normal Track,Normal Album,Normal Artist,2020-01-01,200000,50,false,,2021-01-01T00:00:00Z,pop,Label
+spotify:track:m2,,Album With No Title,Some Artist,2020-01-01,200000,10,false,,2021-01-01T00:00:00Z,pop,Label
+spotify:track:m3,No Artist Track,Some Album,,2020-01-01,200000,10,false,,2021-01-01T00:00:00Z,pop,Label
+spotify:track:m4,Short Row,Some Album,Some Artist
+spotify:track:m5,Extra Row,Album,Artist,2020-01-01,200000,10,false,,2021-01-01T00:00:00Z,pop,Label,EXTRA_VALUE
+,,,,,,,,,,,

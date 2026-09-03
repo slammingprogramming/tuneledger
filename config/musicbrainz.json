@@ -1,0 +1,5 @@
+{
+  "_comment": "MusicBrainz requires a descriptive User-Agent with a real contact method (email or URL) - anonymous/generic agents can get rate-limited or blocked. Edit userAgent below before doing large library scans.",
+  "userAgent": "TuneLedger/1.1 ( set-your-contact-email-or-url-here )",
+  "minConfidence": 0.75
+}

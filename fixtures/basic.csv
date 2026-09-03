@@ -1,0 +1,15 @@
+Track URI,Track Name,Album Name,Artist Name(s),Release Date,Duration (ms),Popularity,Explicit,Added By,Added At,Genres,Record Label,Disc Number,Track Number
+spotify:track:aaa1,Come Together,Abbey Road,The Beatles,1969-09-26,259950,70,false,,2020-01-01T00:00:00Z,rock,Apple,1,1
+spotify:track:aaa2,Something,Abbey Road,The Beatles,1969-09-26,182800,68,false,,2020-01-01T00:00:00Z,rock,Apple,1,2
+spotify:track:aaa3,Come Together,1,The Beatles,2000-11-13,259950,75,false,,2020-01-02T00:00:00Z,rock,Apple,1,1
+spotify:track:aaa4,Come Together - Live,Something Else,The Beatles,1995-01-01,320000,50,false,,2020-01-03T00:00:00Z,rock,Apple,,
+spotify:track:aaa5,Money,The Dark Side of the Moon,Pink Floyd,1973-03-01,382000,80,false,,2020-01-04T00:00:00Z,rock,Harvest,1,6
+spotify:track:aaa6,Money,Echoes: The Best of Pink Floyd,Pink Floyd,2001-11-05,382000,60,false,,2020-01-05T00:00:00Z,rock,EMI,1,6
+spotify:track:aaa7,Money (Live),Delicate Sound of Thunder,Pink Floyd,1988-11-22,650000,40,false,,2020-01-06T00:00:00Z,rock,EMI,1,4
+spotify:track:aaa8,In The Flesh?,The Wall,Pink Floyd,1979-11-30,199000,55,false,,2020-01-07T00:00:00Z,rock,Harvest,1,1
+spotify:track:aaa9,The Thin Ice,The Wall,Pink Floyd,1979-11-30,145000,50,false,,2020-01-07T00:00:00Z,rock,Harvest,1,2
+spotify:track:aaa10,Hey You,The Wall,Pink Floyd,1979-11-30,278000,60,false,,2020-01-07T00:00:00Z,rock,Harvest,2,1
+spotify:track:aaa11,Is There Anybody Out There?,The Wall,Pink Floyd,1979-11-30,144000,45,false,,2020-01-07T00:00:00Z,rock,Harvest,2,2
+spotify:track:aaa1,Come Together,Abbey Road,The Beatles,1969-09-26,259950,70,false,,2020-01-01T00:00:00Z,rock,Apple,1,1
+spotify:track:aaa12,Yesterday,Help!,The Beatles,1965-08-06,125000,80,false,,2020-01-08T00:00:00Z,rock,Parlophone,1,13
+spotify:track:aaa13,Yesterday - Remastered 2009,Help! (Remastered),The Beatles,2009-09-09,125000,85,false,,2020-01-09T00:00:00Z,rock,Apple,1,13

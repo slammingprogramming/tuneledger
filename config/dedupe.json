@@ -1,0 +1,18 @@
+{
+  "_comment": "Tunable weights for the deduplication / preferred-release engine. Lower releaseCategoryPreference = more preferred as the canonical (primary) source when several releases of the same recording are found. Edit and restart the server to change behavior; no code changes needed.",
+
+  "releaseCategoryPreference": {
+    "album": 0,
+    "deluxe": 1,
+    "soundtrack": 2,
+    "unknown": 2.5,
+    "compilation": 3,
+    "single": 4
+  },
+
+  "durationToleranceMsExactMeta": 1500,
+  "durationToleranceMsTitleStem": 4000,
+
+  "fuzzyAutoMergeThreshold": 0.92,
+  "fuzzyReviewThreshold": 0.78
+}

@@ -1,0 +1,14 @@
+node_modules/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+*.log
+
+# AI coding agent artifacts - never belong in the public repo (may reference
+# local machine paths, private notes, or other content not meant to be
+# published). Kept in the private repo; deliberately excluded here.
+.claude/
+AGENT.md
+AGENTS.md
+MEMORY.md
+CLAUDE.md
